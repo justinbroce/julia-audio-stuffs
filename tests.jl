@@ -1,6 +1,5 @@
 include("envelope.jl")
 include("distortion.jl")
-include("frequency.jl")
 include("measure.jl")
 include("synth.jl")
 using  WAV 
@@ -9,8 +8,6 @@ function main()
     env = Envelope(41000,.01,.03,.2,.02,.02)
     a = applyEnvelope((getSine(1,"a4").+getSine(1,"a5").+getSine(1,"e5"))./3,env)
     a2= applyEnvelope((getSine(1,"f#5").+getSine(1,"c4").+getSine(1,"e4"))./3,env)
-     
-    
     b=Float64[]
     c=Float64[]
     #for i in 100.0:-inv(2):1.1 append!(b,sortDistortion(softClip(a,i),Int(ceil(i)))) end
@@ -21,8 +18,6 @@ function main()
     print(length(b), " c: ", length(c))
     d = chebby((b.+ c)./2,.5)
     wavplay(d,41000)
- 
- 
  end
  function otherMain()
      env = Envelope(41000,.1,.03,.01,.012,.012)
@@ -43,9 +38,7 @@ function main()
      wavplay(b,41000)
      
  end
- 
- #main()
- #otherMain()
+
  function disco()
      drumVelope(signal) = applyEnvelope(signal, Envelope(41000,.04,.03,.7,.03,.03))
      bassDrum(x) = softClip(cheb(sortDistortion(drumVelope(getSine(.5,x)),100)), 10)
@@ -99,5 +92,21 @@ function main()
  
  
  end
- 
- disco()
+ function wavReadTest()
+    
+    
+    files = wavread.(["loudSinJingle.wav", "percussion.wav", "summerSin.wav", "violinThing.wav"])
+    filesF64 = [] # the float array vector
+    for i in files
+        push!(filesF64, i[1][:,2])
+    end
+    f = filesF64[2]
+    
+    f = softClip(f,120.1)
+   wavplay(f,41000)
+    
+end
+#wavReadTest()
+#disco()
+ main()
+ #otherMain()

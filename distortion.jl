@@ -3,26 +3,55 @@ using  WAV
 using  FFTW 
 using  DSP
 using Statistics
-
+#for the more imaginative distortions:
+#rolling average like
+function applyDistortion(signal::AbstractVector{T}, increment::Integer, distortion::Function)where
+  {T<:Real}
+    0 < increment || throw(DomainError(increment, "increment must be greater than or equal to 1"))
+  #signal to return
+  newSignal = T[]  
+  signalLength = length(signal)
+  for index in 1:increment:signalLength
+      if index + increment  > signalLength
+          increment = signalLength - index +1
+      end
+      block = signal[index:index+increment-1]
+      append!(newSignal, distortion(block))
+      if index == signalLength  && length(newSignal) < signalLength  
+          push!(newSignal, 80)
+      end
+    end
+    return newSignal
+end
+#clip a signal of a vector
 function hardClip(signal::AbstractVector{T}, limit::T) where 
     {T<:Real}
        0.0 <= limit <= 1.0 || throw(DomainError(limit, "limit must be between 0 and 1"))
        clip(i) = (abs(i[1]) < limit && return i[1])  || return limit > 0 ? limit : -limit
         return clip.(signal)
 end    
-
+#softclipping of a vector. maybe latter on i'll add
+#more sigmoids
 function softClip(signal::AbstractVector{T}, limit)where
     {T<:Real}
-      -1300.0 < limit < 13300.0 || throw(DomainError(limit, "limit must be between 0 and 10"))
+      #as limit becomes really large function behaves like hard cliping. 
+      #might need to check for zed
+      -1300.0 < limit < 13300.0 || throw(DomainError(limit, "limit must be between -1300 and 13000"))
       soft(i) = tanh(limit * i)
       return soft.(signal)
 end
+#weird movable wave shapping that i found
 function chebby(signal::AbstractVector{T}, limit)where
     {T<:Real}
     0.0 <= limit <= 4.0 || throw(DomainError(limit, "limit must be between 0 and 4"))
     cheb(x)=limit*x[1]^3+(1-limit)x[1]
     return cheb.(signal)
 end
+#=gonna figure this out latter:
+#supposed to return a function that represents 
+a weighted sum of chebbysehv polynomials
+right now it will output the a lambda function in string form
+=#
 function poly(weights)
   scale = sum(weights[2])
   nomials = AbstractString["(1)", "(x[1])", "(2x[1]^2-1)",
@@ -40,12 +69,14 @@ function poly(weights)
     
     
 end
-
+#first four chebby polynomials weighted
 function cheb(signal::AbstractVector)
   ch(val)= ((4 * val^3 - 3 * val) + (2 * val^2 - 1) + val + 1)/4
   return ch.(signal)
 end
-
+#=moving average filter but worse:
+# perhaps interested for percussive elements?
+=#
 function fakebitcrush(signal::AbstractVector{T}, rate::Integer) where 
     {T<:Real}
       1 < rate <= length(signal)/rate || 
@@ -59,7 +90,10 @@ function linear(block)#linear regression
     timeVector = range(0.0, step=inv(41000), length=length(block))
     return linreg(block,timeVector)
 end
-
+#=replaces partition amount of samples with linear approximation
+sounds like a combo of bitcrush and lpf applied to random noise.
+pretty cool
+=#
 function linearDistortion(signal::AbstractVector{T}, partition::Integer) where
     {T<:Real}
       0 < partition || throw(DomainError(iterations, "partition must be greater than or equal to 1"))
@@ -68,7 +102,10 @@ function linearDistortion(signal::AbstractVector{T}, partition::Integer) where
     line(block) = f(linear(block),range(0.0, step=inv(41000), length=length(block)))
     applyDistortion(signal, partition,line)
 end
-
+#= replace partition samples with the sample samples but sorted
+ascending or decending based on the linear regression of said partition()
+similar to linearDistortion, but more intense
+=#
 function sortDistortion(signal::AbstractVector{T}, partition::Integer) where
     {T<:Real}
       0 < partition || throw(DomainError(iterations, "partition must be greater than or equal to 1"))
@@ -76,36 +113,6 @@ function sortDistortion(signal::AbstractVector{T}, partition::Integer) where
     return applyDistortion(signal, partition, sorting)
 end
 
-function applyDistortion(signal::AbstractVector{T}, increment::Integer, distortion::Function)where
-    {T<:Real}
-      0 < increment || throw(DomainError(increment, "increment must be greater than or equal to 1"))
-    #signal to return
-    newSignal = T[]  
-    signalLength = length(signal)
-    for index in 1:increment:signalLength
-        if index + increment  > signalLength
-            increment = signalLength - index +1
-        end
-        block = signal[index:index+increment-1]
-        append!(newSignal, distortion(block))
-        if index == signalLength  && length(newSignal) < signalLength  
-            push!(newSignal, 80)
-        end
-      end
-      return newSignal
-end
 
-function main()
-    
-    
-    files = wavread.(["loudSinJingle.wav", "percussion.wav", "summerSin.wav", "violinThing.wav"])
-    filesF64 = [] # the float array vector
-    for i in files
-        push!(filesF64, i[1][:,2])
-    end
-    f = filesF64[2]
-    
-    f = softClip(f,12.1)
-   wavplay(f,41000)
-    
-end
+
+
