@@ -21,6 +21,9 @@ function getFreq(input::AbstractString)
     end
     return frequencies[noteName] * 2^octave
 end    
+function getFreq(input::Real)
+    return input
+end
 #returns a vector where fs is sampling rate, from 0 to seconds in increments of 1/fs
 function getTimeVector(seconds,fs)
     return 0.0 : inv(fs) : seconds

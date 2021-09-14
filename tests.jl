@@ -88,7 +88,7 @@ function main()
      addToMeasure!(measure2, cheb(getSine(2,"c3")),0)
      append!(rendered1, renderMeasure(measure2))
      append!(rendered1, softClip(rendered1,32),30)
-     wavplay(rendered1,41000)
+     wavwrite(rendered1,41000, "face2.wav")
  
  
  end
@@ -105,8 +105,47 @@ function main()
     f = softClip(f,120.1)
    wavplay(f,41000)
     
+ end
+ function bassoon(x) 
+    a = (getSine(1,(2.001*getFreq(x)),41000.0)+
+        getSine(1,(.5003*getFreq(x)),41000.0)+
+        getSine(1,(0.998*getFreq(x)),41000.0))/3
+    
+        return applyEnvelope(softClip(a,3), Envelope(41000.0,.09,.09,7,.1,.1))                                            
+
 end
+function hat()
+    drumVelope(signal) = applyEnvelope(signal, Envelope(41000,.03,.02,.5,.03,.03))
+    a = Float64[]
+    a = drumVelope(getRand(.5))
+    append!(a, drumVelope(getRand(.5)))
+    return a
+
+end
+function sawBASS(x)
+    drumVelope(signal) = applyEnvelope(signal, Envelope(41000,.1,.02,.5,.03,.05))
+    return cheb(drumVelope(getSaw(1, x)))
+    
+end
+function noteTest()
+    bpm = 125
+    m = Measure(bpm, 41000, 8,[])
+    addNotes(m, ["a4", "a4", "d4", "d4","e4", "e4" , "a4","a4"],1,bassoon)
+    addNotes(m, ["c4", "c4", "f4", "f4","g#4", "g#4" , "c4","c4"],1,bassoon)
+    addNotes(m, ["e4", "e4", "a5", "a5","b5", "d5" , "a5","e5"],1,bassoon)
+    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    for i in .5:1:7.5 addToMeasure!(m,hat(),i) end
+    
+    
+    a = renderMeasure(m)
+    f = Float64[]
+    for i in 1:5:50 append!(f,linearDistortion(a, i)) end
+    wavplay(f, 41000)
+    
+end
+noteTest()
 #wavReadTest()
-#disco()
- main()
+#disco
+ #main()
  #otherMain()
+ 
