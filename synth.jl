@@ -39,7 +39,11 @@ function getSine(seconds, freq::AbstractString, fs = 41000.0)
     t = 0.0 : inv(fs) : seconds
     sin.(2π  *  hz  *  t )
 end
-#returns a saw wave at give frequency for givin time
+
+#=returns a saw wave at give frequency for givin time
+#note to self:change to the series formation of saw wave
+to remove aliasing
+=#
 function getSaw(seconds, hz, fs = 41000.0)
     timeVector = getTimeVector(seconds, fs)
     2 .* mod.(timeVector * hz, 1).-1
@@ -50,6 +54,18 @@ function getSaw(seconds, freq::AbstractString, fs = 41000.0)
     timeVector = getTimeVector(seconds, fs)
     2 .* mod.(timeVector * hz, 1).-1
 end
+function lfo(signal::AbstractVector{T},hz,fun::Function, i::Tuple = (1,40),fs=41000)where
+    {T<:Real}
+    inc = Float64(0)
+    newSignal = T[]
+    f(x) = (i[2]-i[1])*sin(2π * x * hz)/2 + (i[2]+i[1])/2
+    for i in signal 
+        push!(newSignal, fun(i,f(inc)))
+        inc+=inv(fs)
+    end
+    return newSignal
+end
+
 #returns a vector containing random noise for seconds
 function getRand(seconds,fs= 41000)
     rng = MersenneTwister(1234)

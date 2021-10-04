@@ -88,7 +88,7 @@ function main()
      addToMeasure!(measure2, cheb(getSine(2,"c3")),0)
      append!(rendered1, renderMeasure(measure2))
      append!(rendered1, softClip(rendered1,32),30)
-     wavwrite(rendered1,41000, "face2.wav")
+     wavplay(rendered1,41000)
  
  
  end
@@ -134,6 +134,9 @@ function noteTest()
     addNotes(m, ["c4", "c4", "f4", "f4","g#4", "g#4" , "c4","c4"],1,bassoon)
     addNotes(m, ["e4", "e4", "a5", "a5","b5", "d5" , "a5","e5"],1,bassoon)
     addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
     for i in .5:1:7.5 addToMeasure!(m,hat(),i) end
     
     
@@ -143,9 +146,19 @@ function noteTest()
     wavplay(f, 41000)
     
 end
-noteTest()
+function lfoTest()
+    a = (getSine(4,"a4").+getRand(4,))/2
+    cheb(x,limit)=limit*x[1]^3+(1-limit)x[1]
+    a = lfo(a,.4,cheb,(.1,3.9))
+    a = lfo(a,.9,cheb,(0,2))
+    a = lfo(a,3,cheb,(3,4))
+    wavplay(a,41000)
+    
+end
+lfoTest()
+#noteTest()
 #wavReadTest()
-#disco
+#disco()
  #main()
  #otherMain()
  
