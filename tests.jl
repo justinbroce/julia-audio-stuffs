@@ -155,7 +155,26 @@ function lfoTest()
     wavplay(a,41000)
     
 end
-lfoTest()
+function chebTEST()
+    a = getSine(.25,"a2",41000)
+    b = Float64[]
+    for i in 2:2:20 
+        append!(b,chebyshev.(i,a))
+        append!(b,sortDistortion(chebyshev.(i,a),10))
+    end
+    d = sawBASS("f3")
+    f = bassoon("f5")
+    for i in 1:1:10 
+        append!(b,chebyshev.(i,d))
+        append!(b,chebyshev.(i,f))
+    end
+    wavplay(b,41000)
+    
+    
+
+end
+#chebTEST()
+#lfoTest()
 #noteTest()
 #wavReadTest()
 #disco()

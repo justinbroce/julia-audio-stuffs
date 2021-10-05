@@ -47,6 +47,29 @@ function chebby(signal::AbstractVector{T}, limit)where
     cheb(x)=limit*x[1]^3+(1-limit)x[1]
     return cheb.(signal)
 end
+function chebyshev(order,x)
+  if order == 0 
+      return 0
+  elseif  order == 1 
+      return x 
+  elseif order < 21
+      Tn_0 = Float64(1)
+      Tn_1 = x
+      Tn = Float64(0)
+      for n in 2:1:order
+          Tn = 2*x*Tn_1-Tn_0
+          Tn_0 = Tn_1
+          Tn_1= Tn
+      end
+      return Tn
+  else
+      return cos(order*acos(x))
+  end
+
+end
+
+
+
 #=gonna figure this out latter:
 #supposed to return a function that represents 
 a weighted sum of chebbysehv polynomials
