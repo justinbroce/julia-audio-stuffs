@@ -3,6 +3,7 @@ using  WAV
 using  FFTW 
 using  DSP
 using Statistics
+include("adaa.jl")
 #for the more imaginative distortions:
 #rolling average like
 function applyDistortion(signal::AbstractVector{T}, increment::Integer, distortion::Function)where
@@ -27,9 +28,29 @@ end
 function hardClip(signal::AbstractVector{T}, limit::T) where 
     {T<:Real}
        0.0 <= limit <= 1.0 || throw(DomainError(limit, "limit must be between 0 and 1"))
-       clip(i) = (abs(i[1]) < limit && return i[1])  || return limit > 0 ? limit : -limit
+       clip(i) = (abs(i[1]) < limit && return i[1])  || return i[1] > 0 ? limit : -limit
         return clip.(signal)
+end   
+
+#hardClipping implented with gain/more idiomatically
+function hardC(signal::Vector{Float64}, gain)::Vector{Float64}
+  c(x,y) = (abs(x*y) < 1 && return x*y)  || return sign(x) 
+  return c.(signal,gain)
 end    
+
+function hardClipAD1(signal::Vector{Float64}, gain)::Vector{Float64}
+  f(x) = (abs(x) < 1 ? x : sign(x) )
+  f1(x) = (abs(x) < 1 ? x^2/2 : x*sign(x) - .5)
+  return processAD1(gain*signal, f,f1)
+end
+
+function hardClipAD2(signal::Vector{Float64}, gain)::Vector{Float64}
+  f(x) = (abs(x) < 1 ? x : sign(x) )
+  f1(x) = (abs(x) < 1 ? x^2/2 : x*sign(x) - .5)
+  f2(x) = (abs(x) < 1 ? x^3/6 : (x^2/2 + 1/6) * sign(x) - x/2) 
+  return processAD2(gain*signal, f,f1,f2)
+end
+
 #softclipping of a vector. maybe latter on i'll add
 #more sigmoids
 function softClip(signal::AbstractVector{T}, limit)where

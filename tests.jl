@@ -2,7 +2,7 @@ include("envelope.jl")
 include("distortion.jl")
 include("measure.jl")
 include("synth.jl")
-using  WAV 
+using WAV 
 function main()
     getRand(.5)
     env = Envelope(41000,.01,.03,.2,.02,.02)
@@ -37,6 +37,22 @@ function main()
      
      wavplay(b,41000)
      
+ end
+ function sortTest()
+    getRand(.5)
+    env = Envelope(41000,.02,.02,.2,.02,.03)
+    a = applyEnvelope((getSine(1,"a4").+getSine(1,"a5").+getSine(1,"e5"))./3,env)
+    a2= applyEnvelope(getRand(1),env)
+    b=Float64[]
+    c=Float64[]
+    
+    for i in 1:1:200 append!(b,sortDistortion(a,Int(ceil(i)))) end
+    for i in 1:1:200 append!(c,sortDistortion(a2,Int(ceil(i)))) end
+    print(getFreq("a9"))
+    print(length(b), " c: ", length(c))
+    #d = chebby((b.+ c)./2,.5)
+    wavplay(b,41000)
+    wavwrite(b,41000,"a4.wav")
  end
 
  function disco()
@@ -128,22 +144,25 @@ function sawBASS(x)
     
 end
 function noteTest()
-    bpm = 125
-    m = Measure(bpm, 41000, 8,[])
-    addNotes(m, ["a4", "a4", "d4", "d4","e4", "e4" , "a4","a4"],1,bassoon)
-    addNotes(m, ["c4", "c4", "f4", "f4","g#4", "g#4" , "c4","c4"],1,bassoon)
-    addNotes(m, ["e4", "e4", "a5", "a5","b5", "d5" , "a5","e5"],1,bassoon)
+    bpm = 200
+    m = Measure(bpm, 110000, 8,[])
+    addNotes(m, ["a4", "e7", "d6", "d4","e4", "e4" , "a3","a4"],1,bassoon)
+    addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" , "c5","c4"],1,bassoon)
+    addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6","e5"],1,bassoon)
     addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
     for i in .5:1:7.5 addToMeasure!(m,hat(),i) end
     
     
     a = renderMeasure(m)
     f = Float64[]
-    for i in 1:5:50 append!(f,linearDistortion(a, i)) end
-    wavplay(f, 41000)
+    for i in 1:5:10 append!(f,hardC(a, i)) end
+    for i in 1:5:10 append!(f,hardClipAD1(a, i)) end
+    for i in 1:5:10 append!(f,hardClipAD2(a, i)) end
+    wavplay(f, 110000)
+    #wavwrite(f,41000,"sorting.wav")
     
 end
 function lfoTest()
@@ -156,28 +175,66 @@ function lfoTest()
     
 end
 function chebTEST()
-    a = getSine(.25,"a2",41000)
-    b = Float64[]
-    for i in 2:2:20 
-        append!(b,chebyshev.(i,a))
-        append!(b,sortDistortion(chebyshev.(i,a),10))
-    end
-    d = sawBASS("f3")
-    f = bassoon("f5")
-    for i in 1:1:10 
-        append!(b,chebyshev.(i,d))
-        append!(b,chebyshev.(i,f))
-    end
+    cheb(x,limit)=limit*x[1]^3+(1-limit)x[1]
+    bpm = 125
+    m = Measure(bpm, 41000, 8,[])
+    sawVelope(signal) = applyEnvelope(signal, Envelope(41000,.17,.1,.7,.1,.1))
+    pad(freq) = softClip(lfo(sawVelope(getSine(1, freq))./5,.2,cheb,(2,3)),50)
+
+    addNotes(m, ["b2", "b3", "d#3", "c3","c#3", "c#3" , "e3","e2"],1,pad)
+    addNotes(m, ["f#4", "f#4", "d#4", "f#4","g#4", "g#4" , "b5","b5"],1,bassoon)
+    a = renderMeasure(m)
+    wavplay(a,41000)
+end
+function chebbyBrato()
+    c(x,order) = cos(order*acos(x))
+    a = (getSine(5,"f4")
+    .+getSine(5,"a4")
+    .+getSine(5,"c5")
+    #.+getRand(5)/100
+    .+getSine(5,"f2")
+    )
+    a = a/(maximum(a)+1)
+
+    b = lfo(a,.5,c,(0,5))
     wavplay(b,41000)
-    
-    
+end
+function adaaTest()
+    a = getSine(1,"c4")
+    b = getSine(10,"f4")
+    @time hardC(a,10)
+    @time hardClipAD1(a,10)
+    @time hardClipAD2(a,10)
+    @time hardC(b,40)
+    @time hardClipAD1(b,40)
+    @time hardClipAD2(b,40)
+
+    f(x) = (abs(x) < 1 ? x : sign(x) )
+    f1(x) = (abs(x) < 1 ? x^2/2 : x*sign(x) - .5)
+    f2(x) = (abs(x) < 1 ? x^3/6 : (x^2/2 + 1/6) * sign(x) - x/2) 
+
 
 end
-#chebTEST()
-#lfoTest()
-#noteTest()
-#wavReadTest()
-#disco()
- #main()
- #otherMain()
- 
+function whatever(x::Vector{Float64},c)::Vector{Float64}
+    b = c^2
+    a = 1-b-c
+    f(t) = b*t + a*(4t^3-3t) + c*(16t^5-20t^3+5t)
+    return f.(x)
+end
+function w()
+    a = getRand(1)
+    @time hardClipAD2(a,1)
+    @time whatever(a,.5)
+    @time cheb(a)
+    @time hardC(a,123)
+    println()
+
+    b = getRand(100)
+    @time hardClipAD2(b,1)
+    @time whatever(b,.5)
+    @time cheb(b)
+    @time hardC(b,123)
+end
+
+w()
+#wavplay(a,41000)
