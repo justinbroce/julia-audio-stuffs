@@ -7,7 +7,7 @@ function AD_chebyshev(order,x)
 
 end
 #=
-this code would not be possible without Jatin Chowdhury and his great post
+this code is based on this post
 https://jatinchowdhury18.medium.com/practical-considerations-for-antiderivative-anti-aliasing-d5847167f510
 
 this is very similar reworking of his code for my purposes
