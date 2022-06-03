@@ -1,0 +1,30 @@
+Instrument.jl
+
+The SetTempoEvent sets the tempo of a MIDI sequence in terms of microseconds per quarter note.
+
+Fields:
+
+dT::Int : Delta time in ticks.
+metatype::UInt8 : Meta type byte of the event.
+tempo::Int : The tempo in microseconds per quarter note.
+
+
+The TimeSignatureEvent contains the time signature of a MIDI sequence.
+
+Fields:
+
+dT::Int : Delta time in ticks.
+metatype::UInt8 : Meta type byte of the event.
+numerator::Int : Numerator of the time signature.
+denominator::Int : Denominator of the time signature.
+clockticks::Int : MIDI clock ticks per click.
+notated32nd_notes::Int : Number of 32nd notes per beat.
+
+bpm(midi)
+
+Return the BPM where the given MIDIFile was exported at. Returns QPM if not found.
+
+ms_per_tick(tpq, qpm)
+ms_per_tick(midi::MIDIFile)
+
+Return how many miliseconds is one tick, based on the quarter notes per minute qpm and ticks per quarter note tpq.

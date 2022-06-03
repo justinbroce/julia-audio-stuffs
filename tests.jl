@@ -2,6 +2,7 @@ include("envelope.jl")
 include("distortion.jl")
 include("measure.jl")
 include("synth.jl")
+include("Instrument.jl")
 using WAV 
 function main()
     getRand(.5)
@@ -144,24 +145,46 @@ function sawBASS(x)
     
 end
 function noteTest()
-    bpm = 200
-    m = Measure(bpm, 110000, 8,[])
+    bpm = 130
+    m = Measure(bpm, 41000, 8,[])
     addNotes(m, ["a4", "e7", "d6", "d4","e4", "e4" , "a3","a4"],1,bassoon)
-    addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" , "c5","c4"],1,bassoon)
-    addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6","e5"],1,bassoon)
+    addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" , "c5","c4"],.98,bassoon)
+    addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6","e5"],.97,bassoon)
     addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    #addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
-    for i in .5:1:7.5 addToMeasure!(m,hat(),i) end
+    
     
     
     a = renderMeasure(m)
     f = Float64[]
-    for i in 1:5:10 append!(f,hardC(a, i)) end
-    for i in 1:5:10 append!(f,hardClipAD1(a, i)) end
-    for i in 1:5:10 append!(f,hardClipAD2(a, i)) end
-    wavplay(f, 110000)
+    append!(f,a)
+   for i in .5:1:7.5 addToMeasure!(m,hat(),i+i*.001) end
+   append!(f,renderMeasure(m))
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],1,sawBASS)
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2","e2"],.9,sawBASS)
+
+   for i in 0:2:7.5 addToMeasure!(m,hat(),i) end
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2"],1.1,sawBASS)
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "d2" , "a2"],1.2,sawBASS)
+   append!(f,renderMeasure(m))
+  
+   addNotes(m, ["a4", "e7", "d6", "d4","e4", "b4" , "a3"],1.1,bassoon)
+   addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" ],1.2,bassoon)
+   addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6"],1.05,bassoon)
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "b3" , "a2"],1.12,sawBASS)
+   append!(f,renderMeasure(m))
+   for i in .5:1:7.5 addToMeasure!(m,hat(),i+i*.003) end
+   for i in 0:2:7.5 addToMeasure!(m,hat(),i*.002) end
+   addNotes(m, ["a4", "e7", "d6", "d4","e4", "b4" , "a3"],1.1,bassoon)
+   addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" ],1.2,bassoon)
+   addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6"],1.05,bassoon)
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "b3" , "a2"],1.12,sawBASS)
+   append!(f,renderMeasure(m))
+   addNotes(m, ["a4", "e7", "d6", "d4","e4", "b4" , "a3"],.6,bassoon)
+   addNotes(m, ["c5", "c4", "f5", "f4","g#5", "g#4" ],.6,bassoon)
+   addNotes(m, ["e5", "e3", "a5", "a6","b6", "d6" , "a6","e5", "e3", "a5", "a6","b6"],.6,bassoon)
+   addNotes(m, ["e2", "e2", "a2", "a2","b2", "b3" , "a2","a3"],.6,sawBASS)
+   append!(f,renderMeasure(m))
+    wavplay(f, 41000)
     #wavwrite(f,41000,"sorting.wav")
     
 end
@@ -235,6 +258,36 @@ function w()
     @time cheb(b)
     @time hardC(b,123)
 end
+function organ(note)
+    hz = getFreq(note)
+    return applyEnvelope(hardClipAD2(compound(hz),200), Envelope(41000.0,.15,.09,7,.1,.04))                                            
+end
+function slow_organ(note)
+    hz = getFreq(note)
+    
+    return applyEnvelope(sortDistortion(softClipAD2(compound2(hz),5),50), Envelope(41000.0,.3,.19,7,.2,.15))                                            
+end
+function lacrimosa()
+    bpm = 140
+    m = Measure(bpm, 41000, 12,[])
+    r = nothing
+    addNotes(m, [r, "c#5", "d5", r,"a5","a#5", r,
+    "d5" , "c#5",r,"c6","a#5"],1,organ)
+    addNotes(m, ["d4","f4","e4","g4"],3,slow_organ)
+    addNotes(m, ["f4","a4","g4","c#4"],3,slow_organ)
+    audio = renderMeasure(m)
 
-w()
+    m2 = Measure(bpm, 41000, 12,[])
+    addNotes(m2, [r, "a5", "d6", r,"a#5","g5", r,
+    "e5" , "f5",r,"a5","c#5"],1,organ)
+    addNotes(m2, ["d5","e4","d4","g4"],3,slow_organ)
+    addNotes(m2, ["f4","g3","a3","a3"],3,slow_organ)
+    append!(audio, renderMeasure(m2))
+    wavplay(audio,41000)
+end
+#disco()
+lacrimosa()
+#noteTest()
+#main()
+#chebbyBrato()
 #wavplay(a,41000)

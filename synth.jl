@@ -39,6 +39,31 @@ function getSine(seconds, freq::AbstractString, fs = 41000.0)
     t = 0.0 : inv(fs) : seconds
     sin.(2π  *  hz  *  t )
 end
+#=
+get a sin wave with vibrato code adapted from:
+https://www.audiolabs-erlangen.de/resources/MIR/FMP/C1/C1S3_Timbre.html
+#Meinard Müller and Frank Zalkow: FMP Notebooks: Educational Material for Teaching and Learning Fundamentals of Music Processing. Proceedings of the International Conference on Music Information Retrieval (ISMIR), Delft, The Netherlands, 2019.
+ 
+=#
+function getSine(seconds, hz, fs, vib_amp=1, vib_rate=5)
+    t = 0.0 : inv(fs) : seconds
+    freq_vib = hz .+ vib_amp .* sin.(t * 2π * vib_rate)
+    phase_vib = zeros(length(t))
+    for i in 2:length(t)
+        phase_vib[i] = phase_vib[i-1] + 2π* freq_vib[i-1] / fs
+    end
+    sin.(phase_vib)
+end
+function getSine(seconds, freq::AbstractString, fs, vib_amp=1, vib_rate=5)
+    hz = getFreq(freq)
+    t = 0.0 : inv(fs) : seconds
+    freq_vib = hz .+ vib_amp .* sin.(t * 2π * vib_rate)
+    phase_vib = zeros(length(t))
+    for i in 2:length(t)
+        phase_vib[i] = phase_vib[i-1] + 2π* freq_vib[i-1] / fs
+    end
+    sin.(phase_vib)
+end
 
 #=returns a saw wave at give frequency for givin time
 #note to self:change to the series formation of saw wave

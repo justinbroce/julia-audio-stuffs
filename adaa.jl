@@ -93,3 +93,6 @@ function hardClipAD2(signal::Vector{Float64}, gain)::Vector{Float64}
     f2(x) = (abs(x) < 1 ? x^3/6 : (x^2/2 + 1/6) * sign(x) - x/2) 
     return processAD2(gain*signal, f,f1,f2)
 end
+function softClipAD2(signal::Vector{Float64}, gain)::Vector{Float64}
+    return processAD2(gain*signal, sc,sc1,sc2)
+end

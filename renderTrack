@@ -1,0 +1,15 @@
+using MIDI
+
+function get_notes(track)
+    track.events[typeof.(track.events) .== MIDI.NoteOnEvent]
+end    
+
+
+function test()
+    lacrimosa = load("lacrimosa.mid")
+    tracks = lacrimosa.tracks
+    msPerTick = ms_per_tick(lacrimosa)
+    get_notes(tracks[1])
+    
+end
+print(test()[1:10])
